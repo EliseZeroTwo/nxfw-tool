@@ -6,4 +6,8 @@
     <RootNamespace>nxfw_tool</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="LibHac" Version="0.10.0" />
+  </ItemGroup>
+
 </Project>
