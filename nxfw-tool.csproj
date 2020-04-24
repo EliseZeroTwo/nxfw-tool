@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="LibHac" Version="0.10.0" />
+    <PackageReference Include="Terminal.Gui" Version="0.81.0" />
   </ItemGroup>
 
 </Project>

@@ -15,7 +15,12 @@ namespace nxfw_tool
         static void Main(string[] args)
         {
             Keys.TryLoadKeys();
-            
+            using(IStorage ncaStorage = Utils.FirmwareUtils.OpenNcaStorageByTID(args[0], 0x010000000000080e))
+            {
+                NcaInfo ncaInfo = new NcaInfo(ncaStorage);
+                Console.WriteLine(ncaInfo.TitleName);
+            }
+        
         }
     }
 }
