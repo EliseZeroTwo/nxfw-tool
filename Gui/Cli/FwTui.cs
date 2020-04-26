@@ -8,7 +8,9 @@ using System.IO.Enumeration;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using Terminal.Gui;
+using LibHac.Fs;
 using LibHac.FsSystem;
+using LibHac.FsSystem.NcaUtils;
 
 namespace nxfw_tool.Gui.Cli
 {
@@ -24,6 +26,7 @@ namespace nxfw_tool.Gui.Cli
         {
 
         }
+
         public void UpdateNcaInfo()
         {
             InfoWin.RemoveAll();
@@ -52,11 +55,36 @@ namespace nxfw_tool.Gui.Cli
             
             NcaInfoLines.Add($"Nca ID: {ncaID}");
 
+            for (NcaSectionType section = NcaSectionType.Code; section <= NcaSectionType.Logo; section++)
+            {
+                if (ncaInfo.Nca.SectionExists(section))
+                {
+                    NcaInfoLines.Add($"\n{section}");
+                    try
+                    {
+                        using (PartitionFileSystem pfs = new PartitionFileSystem(ncaInfo.TryOpenStorageSection(section)))
+                        {
+                            
+                            foreach(DirectoryEntryEx dirEnt in pfs.EnumerateEntries())
+                            {
+                                NcaInfoLines.Add($"{dirEnt.Name} - {dirEnt.Size} bytes");
+                                //pfs.OpenFile(out IFile iFile, LibHac.Common.U8StringHelpers.ToU8Span(dirEnt.FullPath), OpenMode.Read);
+                                //NcaInfoLines.Add($"{(string)FirmwareUtils.ParseFileFromStream(iFile.AsStream())}");
+                            }
+                        }
+                    }
+                    catch (LibHac.HorizonResultException) { }
+                }
+            }
+
+
             //Actually draw them
             int Y = 1;
             foreach (string content in NcaInfoLines)
             {
-                InfoWin.Add(new Label(1, Y++, content));
+                int lines = System.Text.RegularExpressions.Regex.Matches(content, "\n").Count + 1;
+                InfoWin.Add(new Label(1, Y, content));
+                Y += lines;
             }
             //InfoWin.Add(ContentTypeLbl);
 
