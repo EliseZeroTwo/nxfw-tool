@@ -21,13 +21,10 @@ namespace nxfw_tool
             if (args.Length == 0)
                 return;
             
-            FwTui fwTui = new FwTui()
-            {
-                FwDir = args[0]
-            };
+            FwTui.FwDir = args[0];
             
-            fwTui.Init();
-            fwTui.DrawNcaSelection();
+            FwTui.Init();
+            FwTui.ReloadActiveNcas();
         }
     }
 }

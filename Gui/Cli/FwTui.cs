@@ -14,23 +14,108 @@ using LibHac.FsSystem.NcaUtils;
 
 namespace nxfw_tool.Gui.Cli
 {
-    public class FwTui
+    public static class FwTui
     {
-        ColorScheme DarkScheme;
-        ListView listView;
-        Window InfoWin;
+        static ColorScheme DarkScheme;
+        static Window FirmwareWin;
+        static ListView FirmwareListView;
+        static Window InfoWin;
+        public static SelectionListView InfoListView;
+        static MenuBar Menu;
+        static public string FwDir;
+        static List<string> NcaNames;
+        static List<string> DirEntryNames;
 
-        public string FwDir;
-        List<string> NcaNames;
-        public void OpenNewDir()
+        static TextField PathTextField;
+        public static void SelectFileCallback()
         {
-
+            FwDir = PathTextField.Text.ToString();
+            FirmwareListView.RemoveAll();
+            InfoWin.RemoveAll();
+            ReloadActiveNcas();
         }
-
-        public void UpdateNcaInfo()
+        public static void FilePickerCallback()
+        {
+            string opt = DirEntryNames[InfoListView.SelectedItem];
+            
+            if (opt == "Choose This Directory")
+            {
+                FwDir = PathTextField.Text.ToString();
+                ReloadActiveNcas();
+                return;
+            }
+            else if (DirEntryNames[InfoListView.SelectedItem] == "..")
+            {
+                if (PathTextField.Text.Last() == '/')
+                    PathTextField.Text = PathTextField.Text.ToString().Remove(PathTextField.Text.Length - 1);
+                
+                PathTextField.Text = PathTextField.Text.Replace(PathTextField.Text.Split("/").Last(), "");
+            }
+            else
+            {
+                PathTextField.Text = opt + "/";
+            }
+            FilePicker();
+        }
+        public static void FilePicker()
         {
             InfoWin.RemoveAll();
-            string NcaPath = (string)Utils.FirmwareUtils.OpenNcaStorageByTitleName(FwDir, NcaNames[listView.SelectedItem], true);
+            
+            DirEntryNames = new List<string>();
+
+            foreach(var name in Directory.EnumerateDirectories(PathTextField.Text.ToString(), "*"))
+            {
+                DirEntryNames.Add(name);
+            }
+
+            DirEntryNames.Sort();
+            DirEntryNames.Insert(0, "Choose This Directory");
+            DirEntryNames.Insert(1 ,"..");
+
+            
+            InfoListView = new SelectionListView(DirEntryNames);
+            InfoWin.Add(InfoListView);
+            Application.Top.SetFocus(InfoListView);
+
+           
+        }
+
+        public static void SelectFile()
+        {
+            InfoWin.RemoveAll();
+            
+            var Path = new Label ("New Path: ") { X = 1, Y = 1 };
+            PathTextField = new TextField (FwDir) {
+                X = Pos.Right (Path),
+                Y = 1,
+                Width = 40,
+                Text = FwDir,
+            };
+
+            InfoWin.Add(Path);
+            InfoWin.Add(PathTextField);
+
+            var OkButton = new Button ("Ok") { X = 1, Y = 3 };
+            OkButton.Clicked += SelectFileCallback;
+            var CancelButton = new Button ("Cancel") { X = Pos.Right(OkButton), Y = 3 };
+            CancelButton.Clicked += UpdateNcaInfo;
+            var BrowseButton = new Button ("Browse") { X = Pos.Right(CancelButton), Y = 3 };
+            BrowseButton.Clicked += FilePicker;
+            InfoWin.Add(OkButton);
+            InfoWin.Add(CancelButton);
+            InfoWin.Add(BrowseButton);
+            Application.Top.SetFocus(OkButton);
+
+        }
+        public static void OpenNewDir()
+        {
+            SelectFile();
+        }
+
+        public static void UpdateNcaInfo()
+        {
+            InfoWin.RemoveAll();
+            string NcaPath = (string)Utils.FirmwareUtils.OpenNcaStorageByTitleName(FwDir, NcaNames[FirmwareListView.SelectedItem], true);
             NcaInfo ncaInfo = new NcaInfo(new LocalStorage(NcaPath, FileAccess.Read));
             
             List<string> NcaInfoLines = new List<string>();
@@ -89,7 +174,7 @@ namespace nxfw_tool.Gui.Cli
             //InfoWin.Add(ContentTypeLbl);
 
         }
-        public void Init()
+        public static void Init()
         {
             Application.Init ();
             DarkScheme = new ColorScheme(){
@@ -98,14 +183,11 @@ namespace nxfw_tool.Gui.Cli
                 HotFocus = Terminal.Gui.Attribute.Make(Color.Black, Color.Gray),
                 HotNormal  = Terminal.Gui.Attribute.Make(Color.Black, Color.Gray),
             };
-        }
-        public void DrawNcaSelection()
-        {
-            
+
             var Top = Application.Top;
 
             // Creates the top-level window to show
-            var Win = new Window ("Firmware") {
+             FirmwareWin = new Window ("Firmware") {
                 ColorScheme = DarkScheme,
                 X = 0,
                 Y = 1, // Leave one row for the toplevel menu
@@ -114,11 +196,11 @@ namespace nxfw_tool.Gui.Cli
                 Width = Dim.Percent(50),
                 Height = Dim.Fill ()
             };
-            Top.Add (Win);
+            Top.Add (FirmwareWin);
 
             InfoWin = new Window ("Info") {
                 ColorScheme = DarkScheme,
-                X = Pos.Right(Win),
+                X = Pos.Right(FirmwareWin),
                 Y = 1, // Leave one row for the toplevel menu
 
                 // By using Dim.Fill(), it will automatically resize without manual intervention
@@ -129,30 +211,31 @@ namespace nxfw_tool.Gui.Cli
 
             // Creates a menubar, the item "New" has a help menu.
             var menu = new MenuBar (new MenuBarItem [] {
-                new MenuBarItem ("Program", new MenuItem [] {
+                new MenuBarItem ("Tools/Settings", new MenuItem [] {
                     new MenuItem ("Open New FW", "Opens a new fw dir", OpenNewDir),
+                    new MenuItem ("Extract All", "", null),
                     new MenuItem ("Quit", "", Application.RequestStop),
                 }),
             });
             menu.ColorScheme = DarkScheme;
             Top.Add (menu);
+            Application.Run();
+        }
+        public static void ReloadActiveNcas()
+        {
+            
+            var Top = Application.Top;
 
             NcaNames = Utils.FirmwareUtils.GetAllNcasAndName(FwDir).Values.ToList();
             NcaNames.Sort();
 
-
-            listView = new ListView(NcaNames);
-            listView.SelectedChanged += UpdateNcaInfo;
-
             
-            // Add some controls, 
-            Win.Add (
-                // The ones with my favorite layout system
-                listView
-            );
-            Application.Top.SetFocus(listView);
+            FirmwareListView = new ListView(NcaNames);
+            FirmwareListView.SelectedChanged += UpdateNcaInfo;
 
-            Application.Run ();
+            FirmwareListView.RemoveAll(); 
+            FirmwareWin.Add (FirmwareListView);
+            Application.Top.SetFocus(FirmwareListView);
         }
 
     }
