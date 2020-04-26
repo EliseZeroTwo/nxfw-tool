@@ -67,7 +67,7 @@ namespace nxfw_tool.Utils
             }
         }
 
-        public static IStorage OpenNcaStorageByTID(string dirPath, ulong titleId)
+        public static Object OpenNcaStorageByTID(string dirPath, ulong titleId, bool shouldReturnPath=false)
         {
             string outPath = null;
             foreach(string ncaPath in GetAllNcas(dirPath))
@@ -84,11 +84,37 @@ namespace nxfw_tool.Utils
                 }
             }
 
-            if (outPath != null)
+            if (outPath != null && shouldReturnPath == false)
             {
                 return new LocalStorage(outPath, FileAccess.Read);
             }
-            return null;
+
+            return outPath;
+        }
+
+        public static Object OpenNcaStorageByTitleName(string dirPath, string titleName, bool shouldReturnPath=false)
+        {
+            string outPath = null;
+            foreach(string ncaPath in GetAllNcas(dirPath))
+            {
+                NcaInfo nca;
+                using (IStorage inFile = new LocalStorage(ncaPath, FileAccess.Read))
+                {
+                    nca = new NcaInfo(inFile);
+                    if (nca.TitleName == titleName)
+                    {
+                        outPath = ncaPath;
+                        break;
+                    }
+                }
+            }
+
+            if (outPath != null && shouldReturnPath == false)
+            {
+                return new LocalStorage(outPath, FileAccess.Read);
+            }
+
+            return outPath;
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using nxfw_tool.Firmware;
+using nxfw_tool.Gui.Cli;
 using nxfw_tool.Utils;
 using System;
 using System.Collections.Generic;
@@ -14,13 +15,19 @@ namespace nxfw_tool
     {
         static void Main(string[] args)
         {
+            // Load keys from default locations
             Keys.TryLoadKeys();
-            using(IStorage ncaStorage = Utils.FirmwareUtils.OpenNcaStorageByTID(args[0], 0x010000000000080e))
+
+            if (args.Length == 0)
+                return;
+            
+            FwTui fwTui = new FwTui()
             {
-                NcaInfo ncaInfo = new NcaInfo(ncaStorage);
-                Console.WriteLine(ncaInfo.TitleName);
-            }
-        
+                FwDir = args[0]
+            };
+            
+            fwTui.Init();
+            fwTui.DrawNcaSelection();
         }
     }
 }
