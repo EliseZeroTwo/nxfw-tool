@@ -23,6 +23,7 @@ namespace nxfw_tool
             
             FwTui.FwDir = args[0];
             
+            FwTui.FwDir = System.IO.Path.GetFullPath(FwTui.FwDir);
             FwTui.Init();
             FwTui.ReloadActiveNcas();
         }
