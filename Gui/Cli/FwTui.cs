@@ -16,7 +16,13 @@ namespace nxfw_tool.Gui.Cli
 {
     public static class FwTui
     {
-        static ColorScheme DarkScheme;
+        static ColorScheme DarkScheme = new ColorScheme(){
+            Normal = Terminal.Gui.Attribute.Make(Color.Black, Color.Gray),
+            Disabled = Terminal.Gui.Attribute.Make(Color.Black, Color.Gray),
+            HotFocus = Terminal.Gui.Attribute.Make(Color.Black, Color.Gray),
+            HotNormal  = Terminal.Gui.Attribute.Make(Color.Black, Color.Gray),
+        };
+        
         static Window FirmwareWin;
         static ListView FirmwareListView;
         static Window InfoWin;
@@ -107,9 +113,10 @@ namespace nxfw_tool.Gui.Cli
             Application.Top.SetFocus(OkButton);
 
         }
-        public static void OpenNewDir()
+
+        public static void CreateNand()
         {
-            SelectFile();
+            FirmwareInfo nandBuilder = new FirmwareInfo(FwDir);
         }
 
         public static void UpdateNcaInfo()
@@ -123,6 +130,7 @@ namespace nxfw_tool.Gui.Cli
             string FormattedTid = $"{ncaInfo.Nca.Header.TitleId:X16}";
             string FormattedName = $"{ncaInfo.TitleName}";
 
+            FirmwareInfo fwInfo = new FirmwareInfo(FwDir);
             NcaInfoLines.Add($"Title ID: {FormattedTid}");
 
             if(FormattedName != FormattedTid)
@@ -130,11 +138,13 @@ namespace nxfw_tool.Gui.Cli
                 NcaInfoLines.Add($"Title Name: {FormattedName}");
             }
 
+            NcaInfoLines.Add($"Firmware Version: {fwInfo.VersionInfo.Major:d}.{fwInfo.VersionInfo.Minor:d}.{fwInfo.VersionInfo.Micro:d}");
+
             NcaInfoLines.Add($"Content Type: {ncaInfo.Nca.Header.ContentType}");
             
-            string ncaID = NcaPath.Split("/").Last();
+            string ncaID = NcaPath.Split('/').Last();
             if (ncaID == "00.nca")
-                ncaID = NcaPath.Split("/")[NcaPath.Split("/").Length - 2];
+                ncaID = NcaPath.Split('/')[NcaPath.Split('/').Length - 2];
             else
                 ncaID = ncaID.Replace(".nca", "");
             
@@ -153,8 +163,6 @@ namespace nxfw_tool.Gui.Cli
                             foreach(DirectoryEntryEx dirEnt in pfs.EnumerateEntries())
                             {
                                 NcaInfoLines.Add($"{dirEnt.Name} - {dirEnt.Size} bytes");
-                                //pfs.OpenFile(out IFile iFile, LibHac.Common.U8StringHelpers.ToU8Span(dirEnt.FullPath), OpenMode.Read);
-                                //NcaInfoLines.Add($"{(string)FirmwareUtils.ParseFileFromStream(iFile.AsStream())}");
                             }
                         }
                     }
@@ -177,17 +185,12 @@ namespace nxfw_tool.Gui.Cli
         public static void Init()
         {
             Application.Init ();
-            DarkScheme = new ColorScheme(){
-                Normal = Terminal.Gui.Attribute.Make(Color.Black, Color.Gray),
-                Disabled = Terminal.Gui.Attribute.Make(Color.Black, Color.Gray),
-                HotFocus = Terminal.Gui.Attribute.Make(Color.Black, Color.Gray),
-                HotNormal  = Terminal.Gui.Attribute.Make(Color.Black, Color.Gray),
-            };
+            DarkScheme = 
 
             var Top = Application.Top;
 
             // Creates the top-level window to show
-             FirmwareWin = new Window ("Firmware") {
+            FirmwareWin = new Window ("Firmware") {
                 ColorScheme = DarkScheme,
                 X = 0,
                 Y = 1, // Leave one row for the toplevel menu
@@ -212,13 +215,18 @@ namespace nxfw_tool.Gui.Cli
             // Creates a menubar, the item "New" has a help menu.
             var menu = new MenuBar (new MenuBarItem [] {
                 new MenuBarItem ("Tools/Settings", new MenuItem [] {
-                    new MenuItem ("Open New FW", "Opens a new fw dir", OpenNewDir),
+                    new MenuItem ("Open New FW", "Opens a new fw dir", SelectFile),
+                    new MenuItem ("Create Nand", "", CreateNand),
                     new MenuItem ("Extract All", "", null),
                     new MenuItem ("Quit", "", Application.RequestStop),
                 }),
-            });
-            menu.ColorScheme = DarkScheme;
+            })
+            {
+                ColorScheme = DarkScheme,
+            };
             Top.Add (menu);
+
+            FirmwareListView = new ListView();
             Application.Run();
         }
         public static void ReloadActiveNcas()
@@ -229,11 +237,12 @@ namespace nxfw_tool.Gui.Cli
             NcaNames = Utils.FirmwareUtils.GetAllNcasAndName(FwDir).Values.ToList();
             NcaNames.Sort();
 
+            InfoWin.RemoveAll();
             
             FirmwareListView = new ListView(NcaNames);
             FirmwareListView.SelectedChanged += UpdateNcaInfo;
 
-            FirmwareListView.RemoveAll(); 
+             
             FirmwareWin.Add (FirmwareListView);
             Application.Top.SetFocus(FirmwareListView);
         }

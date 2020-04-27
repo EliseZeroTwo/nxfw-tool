@@ -19,12 +19,15 @@ namespace nxfw_tool
             Keys.TryLoadKeys();
 
             if (args.Length == 0)
-                return;
-            
-            FwTui.FwDir = args[0];
+            {
+                FwTui.FwDir = Directory.GetCurrentDirectory() + '/';
+            }
+            else
+                FwTui.FwDir = args[0];
             
             FwTui.Init();
             FwTui.ReloadActiveNcas();
+            
         }
     }
 }
