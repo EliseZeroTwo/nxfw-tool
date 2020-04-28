@@ -19,12 +19,11 @@ namespace nxfw_tool
             Keys.TryLoadKeys();
 
             if (args.Length == 0)
-            {
-                FwTui.FwDir = Directory.GetCurrentDirectory() + '/';
-            }
+                FwTui.FwDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             else
                 FwTui.FwDir = args[0];
             
+            FwTui.FwDir = System.IO.Path.GetFullPath(FwTui.FwDir);
             FwTui.Init();
             FwTui.ReloadActiveNcas();
             
