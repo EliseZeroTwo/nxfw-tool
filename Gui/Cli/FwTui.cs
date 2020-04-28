@@ -54,7 +54,7 @@ namespace nxfw_tool.Gui.Cli
             
             Menu = new MenuBar (new MenuBarItem [] {
                 new MenuBarItem ("Tools/Settings", new MenuItem [] {
-                    new MenuItem ("Open New FW", "Opens a new fw dir", OpenNewDir),
+                    new MenuItem ("Open New FW", "", OpenNewDir),
                     new MenuItem ("Extract All", "", null),
                     new MenuItem ("Quit", "", Application.RequestStop),
                 }),
