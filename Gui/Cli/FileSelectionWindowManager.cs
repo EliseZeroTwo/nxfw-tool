@@ -36,13 +36,10 @@ namespace nxfw_tool.Gui.Cli
         }
         protected void HandleOkPress()
         {
-            try
-            {
-                Path = System.IO.Path.GetFullPath(PathTextField.Text.ToString());
-                FwTui.ReloadActiveNcas();
-                FwTui.NcaInfoWM.ShowNcaInfo();
-            }
-            catch { }
+            Path = System.IO.Path.GetFullPath(PathTextField.Text.ToString());
+            FwTui.FwDir = Path;
+            FwTui.ReloadActiveNcas();
+            FwTui.NcaInfoWM.ShowNcaInfo();            
         }
         public void ShowSelectionView()
         {

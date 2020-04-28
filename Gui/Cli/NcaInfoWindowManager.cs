@@ -19,6 +19,7 @@ namespace nxfw_tool.Gui.Cli
     {
         private Window Window;
         private string Path;
+        FirmwareInfo FwInfo;
 
         public void ShowNcaInfo()
         {
@@ -34,10 +35,11 @@ namespace nxfw_tool.Gui.Cli
 
             NcaInfoLines.Add($"Title ID: {FormattedTid}");
 
-            if(FormattedName != FormattedTid)
-            {
+            if (FormattedName != FormattedTid)
                 NcaInfoLines.Add($"Title Name: {FormattedName}");
-            }
+            
+            if ((FwInfo.VersionInfo.Major | FwInfo.VersionInfo.Minor | FwInfo.VersionInfo.Micro) != 0)
+                NcaInfoLines.Add($"Firmware Version: {FwInfo.VersionInfo.Major}.{FwInfo.VersionInfo.Minor}.{FwInfo.VersionInfo.Micro}");
 
             NcaInfoLines.Add($"Content Type: {ncaInfo.Nca.Header.ContentType}");
             
@@ -82,6 +84,7 @@ namespace nxfw_tool.Gui.Cli
         public NcaInfoWindowManager(string path, Window window)
         {
             Path = path;
+            FwInfo = new FirmwareInfo(Path);
             Window = window;
         }
 

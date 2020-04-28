@@ -26,7 +26,7 @@ namespace nxfw_tool.Firmware
             SystemVersionNca = new NcaInfo((IStorage)FirmwareUtils.OpenNcaStorageByTID(directory, 0x0100000000000809));
             using (IFileSystem systemRomFS = SystemVersionNca.TryOpenFileSystemSection(NcaSectionType.Data))
             {   
-                if (systemRomFS.OpenFile(out IFile versionFile, "/file".ToU8Span(), OpenMode.Read) == Result.Success)
+                if (systemRomFS.FileExists("/file") && systemRomFS.OpenFile(out IFile versionFile, "/file".ToU8Span(), OpenMode.Read) == Result.Success)
                 {
                     VersionInfo.Read(versionFile.AsStream());
                 }

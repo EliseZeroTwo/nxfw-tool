@@ -19,6 +19,9 @@ namespace nxfw_tool.Firmware
 
         public NcaInfo(IStorage ncaIStorage)
         {
+            if (ncaIStorage == null)
+                throw new ApplicationException("Cannot stat nca");
+                
             Nca = new Nca(Keys.Keyset, ncaIStorage);
             
             using (IFileSystem exefs = TryOpenFileSystemSection(NcaSectionType.Code))
