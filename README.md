@@ -22,6 +22,6 @@ There are currently no release binaries provided as this tool is heavily WIP & i
 
 ## Credits
 
-[Jakibaki](https://github.com/Jakibaki) for generally helping out with stuff
-[Thealexbarney](https://github.com/Thealexbarney/LibHac) for their LibHac library
-[migueldeicaza](https://github.com/migueldeicaza/gui.cs) for their gui.cs library
+[Jakibaki](https://github.com/Jakibaki) for generally helping out with stuff  
+[Thealexbarney](https://github.com/Thealexbarney/LibHac) for their LibHac library  
+[migueldeicaza](https://github.com/migueldeicaza/gui.cs) for their gui.cs library  
