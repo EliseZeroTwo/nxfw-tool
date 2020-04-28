@@ -39,7 +39,7 @@ namespace nxfw_tool.Gui.Cli
             Path = System.IO.Path.GetFullPath(PathTextField.Text.ToString());
             FwTui.FwDir = Path;
             FwTui.ReloadActiveNcas();
-            FwTui.NcaInfoWM.ShowNcaInfo();            
+            FwTui.InfoWin.RemoveAll();            
         }
         public void ShowSelectionView()
         {

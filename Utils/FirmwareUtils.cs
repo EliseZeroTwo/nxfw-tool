@@ -20,8 +20,11 @@ namespace nxfw_tool.Utils
                     NcaInfo nca;
                     using (IStorage inFile = new LocalStorage(dir + "/00.nca", FileAccess.Read))
                     {
-                        nca = new NcaInfo(inFile);
-                        ncaPathList.Add(dir + "/00.nca", nca.TitleName);
+                        if (inFile != null)
+                        {
+                            nca = new NcaInfo(inFile);
+                            ncaPathList.Add(dir + "/00.nca", nca.TitleName);
+                        }
                     }
                 }
             }
@@ -31,8 +34,11 @@ namespace nxfw_tool.Utils
                 NcaInfo nca;
                 using (IStorage inFile = new LocalStorage(ncaPath, FileAccess.Read))
                 {
-                    nca = new NcaInfo(inFile); 
-                    ncaPathList.Add(ncaPath, nca.TitleName);
+                    if (inFile != null)
+                    {
+                        nca = new NcaInfo(inFile); 
+                        ncaPathList.Add(ncaPath, nca.TitleName);
+                    }
                 }
             }
 
@@ -61,8 +67,11 @@ namespace nxfw_tool.Utils
                 NcaInfo nca;
                 using (IStorage inFile = new LocalStorage(ncaPath, FileAccess.Read))
                 {
-                    nca = new NcaInfo(inFile);
-                    nca.Extract(outputDirectoryPath);  
+                    if (inFile != null)
+                    {
+                        nca = new NcaInfo(inFile);
+                        nca.Extract(outputDirectoryPath);  
+                    }
                 }
             }
         }
@@ -75,11 +84,14 @@ namespace nxfw_tool.Utils
                 NcaInfo nca;
                 using (IStorage inFile = new LocalStorage(ncaPath, FileAccess.Read))
                 {
-                    nca = new NcaInfo(inFile);
-                    if (nca.Nca.Header.TitleId == titleId)
+                    if (inFile != null)
                     {
-                        outPath = ncaPath;
-                        break;
+                        nca = new NcaInfo(inFile);
+                        if (nca.Nca.Header.TitleId == titleId)
+                        {
+                            outPath = ncaPath;
+                            break;
+                        }
                     }
                 }
             }
@@ -100,11 +112,14 @@ namespace nxfw_tool.Utils
                 NcaInfo nca;
                 using (IStorage inFile = new LocalStorage(ncaPath, FileAccess.Read))
                 {
-                    nca = new NcaInfo(inFile);
-                    if (nca.TitleName == titleName)
+                    if (inFile != null)
                     {
-                        outPath = ncaPath;
-                        break;
+                        nca = new NcaInfo(inFile);
+                        if (nca.TitleName == titleName)
+                        {
+                            outPath = ncaPath;
+                            break;
+                        }
                     }
                 }
             }
