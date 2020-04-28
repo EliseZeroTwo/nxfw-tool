@@ -62,27 +62,28 @@ namespace nxfw_tool.Gui.Cli
             {
                 ColorScheme = DarkScheme,
             };
-
-
+            
             Top.Add (FirmwareWin);
             Top.Add (InfoWin);
             Top.Add (Menu);
+
+            ReloadActiveNcas();
+
             Application.Run();
         }
         public static void ReloadActiveNcas()
         {
-            
+            FirmwareWin.RemoveAll();
             var Top = Application.Top;
 
             NcaNames = Utils.FirmwareUtils.GetAllNcasAndName(FwDir).Values.ToList();
             NcaNames.Sort();
-
             
             FirmwareListView = new ListView(NcaNames);
             NcaInfoWM = new NcaInfoWindowManager(FwDir, InfoWin);
             FirmwareListView.SelectedChanged += NcaInfoWM.ShowNcaInfo;
 
-            FirmwareListView.RemoveAll(); 
+            
             FirmwareWin.Add (FirmwareListView);
             Application.Top.SetFocus(FirmwareListView);
         }

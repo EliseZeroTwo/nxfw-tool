@@ -19,9 +19,9 @@ namespace nxfw_tool
             Keys.TryLoadKeys();
 
             if (args.Length == 0)
-                return;
-            
-            FwTui.FwDir = args[0];
+                FwTui.FwDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            else
+                FwTui.FwDir = args[0];
             
             FwTui.FwDir = System.IO.Path.GetFullPath(FwTui.FwDir);
             FwTui.Init();
