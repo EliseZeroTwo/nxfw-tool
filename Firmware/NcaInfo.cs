@@ -19,6 +19,9 @@ namespace nxfw_tool.Firmware
 
         public NcaInfo(IStorage ncaIStorage)
         {
+            if (ncaIStorage == null)
+                throw new ApplicationException("Cannot stat nca");
+                
             Nca = new Nca(Keys.Keyset, ncaIStorage);
             
             using (IFileSystem exefs = TryOpenFileSystemSection(NcaSectionType.Code))
@@ -133,13 +136,32 @@ namespace nxfw_tool.Firmware
             return pathList;
         }
 
-        public int Extract(string outDir)
+        public int Extract(string outDir, bool code=true, bool data=true, bool logo=true)
         {
             
             int res = 0;
             Console.WriteLine($"--- {FormatName} ---");
             for(NcaSectionType section = NcaSectionType.Code; section <= NcaSectionType.Logo; section++)
             {
+                
+                switch (section)
+                {
+                case NcaSectionType.Code:
+                    if (!code)
+                        continue;
+                    break;
+                case NcaSectionType.Data:
+                    if (!data)
+                        continue;
+                    break;
+                case NcaSectionType.Logo:
+                    if (!logo)
+                        continue;
+                    break;
+                default:
+                    continue;
+                }
+
                 using (IFileSystem currentIFs = TryOpenFileSystemSection(section))
                 {
                     if (currentIFs != null)
