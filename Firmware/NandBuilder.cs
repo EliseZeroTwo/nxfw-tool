@@ -12,7 +12,7 @@ namespace nxfw_tool.Firmware
 
         public int Build()
         {
-            int res = 0;  
+            int res = 0;
 
             retn:
             return res;
