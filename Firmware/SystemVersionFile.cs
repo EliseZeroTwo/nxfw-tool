@@ -4,12 +4,12 @@ using static System.Text.Encoding;
 
 namespace nxfw_tool.Firmware
 {
-    [StructLayout(LayoutKind.Sequential, Pack = 0x4, Size = 256)]
     public struct SystemVersionFile
     {
         public byte Major;
         public byte Minor;
         public byte Micro;
+        public byte Rev;
         public string VersionPlatform;
         public string VersionHash;
         public string VersionString;
@@ -25,7 +25,8 @@ namespace nxfw_tool.Firmware
             Major = r.ReadByte();
             Minor = r.ReadByte();
             Micro = r.ReadByte();
-            r.ReadBytes(5);
+            Rev = r.ReadByte();
+            r.ReadBytes(4);
             VersionPlatform = ASCII.GetString(r.ReadBytes(0x20));
             VersionHash = ASCII.GetString(r.ReadBytes(0x40));
             VersionString = ASCII.GetString(r.ReadBytes(0x18));
