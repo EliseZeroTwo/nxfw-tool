@@ -47,7 +47,6 @@ namespace nxfw_tool.Firmware
 
         public void BuildAll(bool exfat=true)
         {
-            int res = 0;
             NcaInfo bcpkg21NcaInfo;
             NcaInfo bcpkg23NcaInfo;
             string bcpkg21NcaPath = "";
@@ -77,30 +76,30 @@ namespace nxfw_tool.Firmware
                 return;
             }
 
-            byte[] bctContents;
-            byte[] pkg1Contents;
-            byte[] pkg2Contents;
-
+            // BOOT0 & BOOT1
             using (IFileSystem safeIFs = bcpkg23NcaInfo.TryOpenFileSystemSection(NcaSectionType.Data))
             using (IFileSystem normalIFs = bcpkg21NcaInfo.TryOpenFileSystemSection(NcaSectionType.Data))
             {
-                if ((safeIFs == null && normalIFs == null) || (!normalIFs.FileExists($"/{fwInfo.VersionInfo.VersionPlatform.ToLower()}/bct") || !normalIFs.FileExists($"/{fwInfo.VersionInfo.VersionPlatform.ToLower()}/package1") || !normalIFs.FileExists($"/{fwInfo.VersionInfo.VersionPlatform.ToLower()}/package2") || !safeIFs.FileExists($"/{fwInfo.VersionInfo.VersionPlatform.ToLower()}/bct")))
+                if ((safeIFs == null && normalIFs == null) || (!normalIFs.FileExists($"/{fwInfo.VersionInfo.VersionPlatform.ToLower()}/bct") || !normalIFs.FileExists($"/{fwInfo.VersionInfo.VersionPlatform.ToLower()}/package1") || !normalIFs.FileExists($"/{fwInfo.VersionInfo.VersionPlatform.ToLower()}/package2") || !safeIFs.FileExists($"/{fwInfo.VersionInfo.VersionPlatform.ToLower()}/bct") || !safeIFs.FileExists($"/{fwInfo.VersionInfo.VersionPlatform.ToLower()}/package1")))
                 {
                     ThrowError("Invalid firmware! missing bct/pkg1/pkg2");
                     return;
                 }
 
                 using (FileStream boot0File = new FileStream(Path.GetFullPath($"{FirmwareDirectory}/BOOT0.bin"), FileMode.Create))
+                using (FileStream boot1File = new FileStream(Path.GetFullPath($"{FirmwareDirectory}/BOOT1.bin"), FileMode.Create))
                 {
                     for (int x = 0; x < 2; x++)
                     {
                         // Open Files
                         normalIFs.OpenFile(out IFile normalBctIFile, $"/{fwInfo.VersionInfo.VersionPlatform.ToLower()}/bct".ToU8Span(), OpenMode.Read);
                         safeIFs.OpenFile(out IFile safeBctIFile, $"/{fwInfo.VersionInfo.VersionPlatform.ToLower()}/bct".ToU8Span(), OpenMode.Read);
+                        safeIFs.OpenFile(out IFile safePkg1IFile, $"/{fwInfo.VersionInfo.VersionPlatform.ToLower()}/package1".ToU8Span(), OpenMode.Read);
 
                         // Get file sizes
                         normalBctIFile.GetSize(out long normalBctSize);
                         safeBctIFile.GetSize(out long safeBctSize);
+                        safePkg1IFile.GetSize(out long safePkg1Size);
 
                         // Write normal bct
                         byte[] normalBctBuffer = new byte[normalBctSize];
@@ -117,6 +116,13 @@ namespace nxfw_tool.Firmware
                         boot0File.Write(safeBctBuffer, 0, (int)safeBctSize);
                         for (int j = 0; j < (0x4000 - safeBctSize); j++)
                             boot0File.WriteByte(0);
+                            
+                        byte[] safePkg1Buffer = new byte[safePkg1Size];
+                        safePkg1IFile.Read(out long safePkg1ReadLen, 0, safePkg1Buffer.AsSpan());
+                        boot1File.Write(safePkg1Buffer, 0, (int)safePkg1Size);
+                        for (int j = 0; j < (0x40000 - safePkg1Size); j++)
+                            boot1File.WriteByte(0);
+                        
                     }
 
                     for (int j = 0; j < 0xF0000; j++)
@@ -131,11 +137,10 @@ namespace nxfw_tool.Firmware
                             boot0File.WriteByte(0);
                     }
                 }
-                
-
             }
 
-            retn:
+
+
             return;
         }
     }
