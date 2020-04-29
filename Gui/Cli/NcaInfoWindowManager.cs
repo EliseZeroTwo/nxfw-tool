@@ -39,7 +39,10 @@ namespace nxfw_tool.Gui.Cli
                 NcaInfoLines.Add($"Title Name: {FormattedName}");
             
             if ((FwInfo.VersionInfo.Major | FwInfo.VersionInfo.Minor | FwInfo.VersionInfo.Micro) != 0)
+            {
                 NcaInfoLines.Add($"Firmware Version: {FwInfo.VersionInfo.Major}.{FwInfo.VersionInfo.Minor}.{FwInfo.VersionInfo.Micro}");
+                NcaInfoLines.Add($"Firmware Description: {FwInfo.VersionInfo.VersionDescription}");
+            }
 
             NcaInfoLines.Add($"Content Type: {ncaInfo.Nca.Header.ContentType}");
             
