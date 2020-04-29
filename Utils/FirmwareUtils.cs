@@ -30,6 +30,8 @@ namespace nxfw_tool.Utils
 
             foreach (string dir in Directory.EnumerateDirectories(dirPath, "*.nca"))
             {
+                if (dir.EndsWith(".cnmt.nca"))
+                    continue;
                 if (File.Exists(dir + Path.DirectorySeparatorChar + "00.nca"))
                 {
                     NcaInfo nca;
@@ -46,6 +48,9 @@ namespace nxfw_tool.Utils
 
             foreach (string ncaPath in Directory.EnumerateFiles(dirPath, "*.nca"))
             {
+                if (ncaPath.EndsWith(".cnmt.nca"))
+                    continue;
+
                 NcaInfo nca;
                 using (IStorage inFile = new LocalStorage(ncaPath, FileAccess.Read))
                 {
@@ -92,12 +97,16 @@ namespace nxfw_tool.Utils
                 return ncaPathList;
             foreach (string dir in Directory.EnumerateDirectories(dirPath, "*.nca"))
             {
+                if (dir.EndsWith(".cnmt.nca"))
+                    continue;
                 if (File.Exists(dir + Path.DirectorySeparatorChar + "00.nca"))
                     ncaPathList.Add(dir + Path.DirectorySeparatorChar + "00.nca");
             }
 
             foreach (string ncaPath in Directory.EnumerateFiles(dirPath, "*.nca"))
             {
+                if (ncaPath.EndsWith(".cnmt.nca"))
+                    continue;
                 ncaPathList.Add(ncaPath);
             }
 

@@ -26,6 +26,9 @@ namespace nxfw_tool.Gui.Cli
         {
             Window.RemoveAll();
 
+            if (FwTui.NcaNames.Count == 0)
+                return;
+
             string NcaPath = (string)Utils.FirmwareUtils.GetNcaPathFromName(Path, FwTui.NcaNames[FwTui.FirmwareListView.SelectedItem]);
             NcaInfo ncaInfo = new NcaInfo(new LocalStorage(NcaPath, FileAccess.Read));
             
