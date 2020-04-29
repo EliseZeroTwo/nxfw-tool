@@ -6,7 +6,7 @@ namespace nxfw_tool.Gui.Cli
 {
     public class FileSelectionWindowManager
     {
-        private Window Window;
+        private Window ChildWindow;
         public string Path = "";
 
         private ListView DirectoryListView;
@@ -19,11 +19,19 @@ namespace nxfw_tool.Gui.Cli
 
         public void ShowInvalidPathDialog()
         {
+            WarningBox warningBox = new WarningBox("Invalid Path!");
+            warningBox.OkButton.Clicked += () => { ChildWindow.Remove(warningBox); Application.Top.SetFocus(ChildWindow); };
+            ChildWindow.Add(warningBox);
+            ChildWindow.SetFocus(warningBox);
+
+            FwTui.LoggerWM.Log($"Tried to open invalid dir: {PathTextField.Text.ToString()}");
+
+            /*
             if(InvalidPathOkButton != null)
                 return;
-
+            
             InvalidPathOkButton = new Button("Ok", true);
-            Dialog dialog = new Dialog("Invalid Path", 100, 25);
+            Dialog dialog = new Dialog("Warning", 50, 15);
             
             InvalidPathOkButton.Clicked += () => 
             {
@@ -34,7 +42,7 @@ namespace nxfw_tool.Gui.Cli
 
             dialog.AddButton(InvalidPathOkButton);
 
-            Window.Add(dialog);
+            Window.Add(dialog);*/
         }
 
         protected void HandleFileSelectionEvent()
@@ -77,7 +85,7 @@ namespace nxfw_tool.Gui.Cli
                 return;
             }
 
-            Window.RemoveAll();
+            ChildWindow.RemoveAll();
             
             DirEntryNames = new System.Collections.Generic.List<string>();
             foreach(var name in Directory.EnumerateDirectories(PathTextField.Text.ToString(), "*"))
@@ -90,12 +98,12 @@ namespace nxfw_tool.Gui.Cli
             DirEntryNames.Insert(1 ,"..");
 
             DirectoryListView = new SelectionListView(DirEntryNames, new Action(HandleFileSelectionEvent));
-            Window.Add(DirectoryListView);
+            ChildWindow.Add(DirectoryListView);
             Application.Top.SetFocus(DirectoryListView);
         }
         public void ShowEntryView()
         {
-            Window.RemoveAll();
+            ChildWindow.RemoveAll();
 
             var PathLabel = new Label ("Path: ") { X = 1, Y = 1 };
             PathTextField = new TextField (Path) {
@@ -113,21 +121,21 @@ namespace nxfw_tool.Gui.Cli
             var BrowseButton = new Button ("Browse") { X = Pos.Right(CancelButton), Y = 3 };
             BrowseButton.Clicked += ShowSelectionView;
 
-            Window.Add(PathLabel);
-            Window.Add(PathTextField);
-            Window.Add(OkButton);
-            Window.Add(CancelButton);
-            Window.Add(BrowseButton);
+            ChildWindow.Add(PathLabel);
+            ChildWindow.Add(PathTextField);
+            ChildWindow.Add(OkButton);
+            ChildWindow.Add(CancelButton);
+            ChildWindow.Add(BrowseButton);
             Application.Top.SetFocus(OkButton);
         }
 
         public FileSelectionWindowManager(Window window, string path)
         {
             Path = path;
-            Window = window;
+            ChildWindow = window;
 
             if (!System.IO.Directory.Exists(path))
-                throw new ApplicationException($"Path {path} does not exist");
+                path = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         }
         
     }
