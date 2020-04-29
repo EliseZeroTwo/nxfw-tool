@@ -64,8 +64,7 @@ namespace nxfw_tool.Gui.Cli
             };
 
             LoggerWM = new LoggerWindowManager(LoggerWin);
-
-            
+ 
             Menu = new MenuBar (new MenuBarItem [] {
                 new MenuBarItem ("Tools", new MenuItem [] {
                     new MenuItem ("Open New FW", "", OpenNewDir),

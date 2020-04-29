@@ -25,14 +25,11 @@ namespace nxfw_tool.Gui.Cli
 
         public LoggerWindowManager(Window window)
         {
-            ChildWindow = window;
-
             LoggerListView = new ListView(LogList);
-
+            ChildWindow = window;
+            
             ChildWindow.RemoveAll();
             ChildWindow.Add(LoggerListView);
-
         }
-        
     }
 }
