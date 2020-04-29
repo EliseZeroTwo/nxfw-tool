@@ -23,17 +23,21 @@ namespace nxfw_tool.Firmware
         public FirmwareInfo(string directory)
         {
             Directory = directory;
-            IStorage sysVerNcaStorage = (IStorage)FirmwareUtils.OpenNcaStorageByTID(directory, 0x0100000000000809);
-            if (sysVerNcaStorage == null)
-                return;
-            SystemVersionNca = new NcaInfo(sysVerNcaStorage);
+            string sysVerNcaPath = FirmwareUtils.GetNcaPathFromTID(Directory, 0x0100000000000809);
+            if (sysVerNcaPath != "")
+            {
+                IStorage sysVerNcaStorage = new LocalStorage(sysVerNcaPath, FileAccess.Read);
+                if (sysVerNcaStorage == null)
+                    return;
+                SystemVersionNca = new NcaInfo(sysVerNcaStorage);
 
 
-            using (IFileSystem systemRomFS = SystemVersionNca.TryOpenFileSystemSection(NcaSectionType.Data))
-            {   
-                if (systemRomFS.FileExists("/file") && systemRomFS.OpenFile(out IFile versionFile, "/file".ToU8Span(), OpenMode.Read) == Result.Success)
-                {
-                    VersionInfo.Read(versionFile.AsStream());
+                using (IFileSystem systemRomFS = SystemVersionNca.TryOpenFileSystemSection(NcaSectionType.Data))
+                {   
+                    if (systemRomFS.FileExists("/file") && systemRomFS.OpenFile(out IFile versionFile, "/file".ToU8Span(), OpenMode.Read) == Result.Success)
+                    {
+                        VersionInfo.Read(versionFile.AsStream());
+                    }
                 }
             }
         }

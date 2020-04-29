@@ -25,7 +25,7 @@ namespace nxfw_tool.Gui.Cli
         {
             Window.RemoveAll();
 
-            string NcaPath = (string)Utils.FirmwareUtils.OpenNcaStorageByTitleName(Path, FwTui.NcaNames[FwTui.FirmwareListView.SelectedItem], true);
+            string NcaPath = (string)Utils.FirmwareUtils.GetNcaPathFromName(Path, FwTui.NcaNames[FwTui.FirmwareListView.SelectedItem]);
             NcaInfo ncaInfo = new NcaInfo(new LocalStorage(NcaPath, FileAccess.Read));
             
             List<string> NcaInfoLines = new List<string>();

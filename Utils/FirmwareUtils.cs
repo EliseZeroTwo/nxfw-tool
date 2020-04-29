@@ -10,20 +10,35 @@ namespace nxfw_tool.Utils
 {
     public static class FirmwareUtils
     {
-        public static Dictionary<string, string> GetAllNcasAndName(string dirPath)
+        public static string FirmwarePath
+        {
+            get
+            {
+                return FirmwarePath;
+            }
+            set
+            {
+                FirmwarePath = value;
+            }
+        }
+        public static Dictionary<string, string> GetAllNcaPathsAndNames(string dirPath)
         {
             Dictionary<string, string> ncaPathList = new Dictionary<string, string>();
+                
+            if (!Directory.Exists(dirPath))
+                return ncaPathList;
+
             foreach (string dir in Directory.EnumerateDirectories(dirPath, "*.nca"))
             {
-                if (File.Exists(dir + "/00.nca"))
+                if (File.Exists(dir + Path.DirectorySeparatorChar + "00.nca"))
                 {
                     NcaInfo nca;
-                    using (IStorage inFile = new LocalStorage(dir + "/00.nca", FileAccess.Read))
+                    using (IStorage inFile = new LocalStorage(dir + Path.DirectorySeparatorChar + "00.nca", FileAccess.Read))
                     {
                         if (inFile != null)
                         {
                             nca = new NcaInfo(inFile);
-                            ncaPathList.Add(dir + "/00.nca", nca.TitleName);
+                            ncaPathList.Add(dir + Path.DirectorySeparatorChar + "00.nca", nca.TitleName);
                         }
                     }
                 }
@@ -44,13 +59,41 @@ namespace nxfw_tool.Utils
 
             return ncaPathList;
         }
-        public static List<string> GetAllNcas(string dirPath)
+        public static string GetNcaPathFromTID(string dirPath, ulong tid)
+        {
+            foreach(string path in GetAllNcaPaths(dirPath))
+            {
+                NcaInfo ncaInfo = new NcaInfo(new LocalStorage(path, FileAccess.Read));
+                if (ncaInfo.Nca.Header.TitleId == tid)
+                    return path;
+            }
+            return "";
+        }
+        public static string GetNcaPathFromName(string dirPath, string name)
+        {
+            Dictionary<string, string> PathNameMap = GetAllNcaPathsAndNames(dirPath);
+            foreach(string path in PathNameMap.Keys)
+            {
+                if (!System.IO.File.Exists(path))
+                    continue;
+                
+                IStorage ncaStorage = new LocalStorage(path, FileAccess.Read);
+                
+                NcaInfo ncaInfo = new NcaInfo(ncaStorage);
+                if (ncaInfo.TitleName == name)
+                    return path;
+            }
+            return "";
+        }
+        public static List<string> GetAllNcaPaths(string dirPath)
         {
             List<string> ncaPathList = new List<string>();
+            if (!Directory.Exists(dirPath))
+                return ncaPathList;
             foreach (string dir in Directory.EnumerateDirectories(dirPath, "*.nca"))
             {
-                if (File.Exists(dir + "/00.nca"))
-                    ncaPathList.Add(dir + "/00.nca");
+                if (File.Exists(dir + Path.DirectorySeparatorChar + "00.nca"))
+                    ncaPathList.Add(dir + Path.DirectorySeparatorChar + "00.nca");
             }
 
             foreach (string ncaPath in Directory.EnumerateFiles(dirPath, "*.nca"))
@@ -62,7 +105,7 @@ namespace nxfw_tool.Utils
         }
         public static void ExtractAll(string inFirmwareDirectoryPath, string outputDirectoryPath)
         {
-            foreach(string ncaPath in GetAllNcas(inFirmwareDirectoryPath))
+            foreach(string ncaPath in GetAllNcaPaths(inFirmwareDirectoryPath))
             {
                 NcaInfo nca;
                 using (IStorage inFile = new LocalStorage(ncaPath, FileAccess.Read))
@@ -74,62 +117,6 @@ namespace nxfw_tool.Utils
                     }
                 }
             }
-        }
-
-        public static Object OpenNcaStorageByTID(string dirPath, ulong titleId, bool shouldReturnPath=false)
-        {
-            string outPath = null;
-            foreach(string ncaPath in GetAllNcas(dirPath))
-            {
-                NcaInfo nca;
-                using (IStorage inFile = new LocalStorage(ncaPath, FileAccess.Read))
-                {
-                    if (inFile != null)
-                    {
-                        nca = new NcaInfo(inFile);
-                        if (nca.Nca.Header.TitleId == titleId)
-                        {
-                            outPath = ncaPath;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (outPath != null && shouldReturnPath == false)
-            {
-                return new LocalStorage(outPath, FileAccess.Read);
-            }
-
-            return outPath;
-        }
-
-        public static Object OpenNcaStorageByTitleName(string dirPath, string titleName, bool shouldReturnPath=false)
-        {
-            string outPath = null;
-            foreach(string ncaPath in GetAllNcas(dirPath))
-            {
-                NcaInfo nca;
-                using (IStorage inFile = new LocalStorage(ncaPath, FileAccess.Read))
-                {
-                    if (inFile != null)
-                    {
-                        nca = new NcaInfo(inFile);
-                        if (nca.TitleName == titleName)
-                        {
-                            outPath = ncaPath;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (outPath != null && shouldReturnPath == false)
-            {
-                return new LocalStorage(outPath, FileAccess.Read);
-            }
-
-            return outPath;
         }
     }
 }

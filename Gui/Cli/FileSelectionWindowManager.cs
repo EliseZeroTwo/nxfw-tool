@@ -12,8 +12,30 @@ namespace nxfw_tool.Gui.Cli
         private ListView DirectoryListView;
         private TextField PathTextField;
         private System.Collections.Generic.List<string> DirEntryNames;
+        public Button OkButton;
+        public Button InvalidPathOkButton;
         
         protected bool Selection = false;
+
+        public void ShowInvalidPathDialog()
+        {
+            if(InvalidPathOkButton != null)
+                return;
+
+            InvalidPathOkButton = new Button("Ok", true);
+            Dialog dialog = new Dialog("Invalid Path", 100, 25);
+            
+            InvalidPathOkButton.Clicked += () => 
+            {
+                FwTui.InfoWin.Remove(dialog);
+                Application.Top.SetFocus(OkButton);
+                InvalidPathOkButton = null;
+            };
+
+            dialog.AddButton(InvalidPathOkButton);
+
+            Window.Add(dialog);
+        }
 
         protected void HandleFileSelectionEvent()
         {
@@ -36,6 +58,12 @@ namespace nxfw_tool.Gui.Cli
         }
         protected void HandleOkPress()
         {
+            if (!Directory.Exists(PathTextField.Text.ToString()))
+            {
+                ShowInvalidPathDialog();
+                return;
+            }
+
             Path = System.IO.Path.GetFullPath(PathTextField.Text.ToString());
             FwTui.FwDir = Path;
             FwTui.ReloadActiveNcas();
@@ -43,10 +71,15 @@ namespace nxfw_tool.Gui.Cli
         }
         public void ShowSelectionView()
         {
+            if (!Directory.Exists(PathTextField.Text.ToString()))
+            {
+                ShowInvalidPathDialog();
+                return;
+            }
+
             Window.RemoveAll();
             
             DirEntryNames = new System.Collections.Generic.List<string>();
-
             foreach(var name in Directory.EnumerateDirectories(PathTextField.Text.ToString(), "*"))
             {
                 DirEntryNames.Add(System.IO.Path.GetFileName(name));
@@ -72,7 +105,7 @@ namespace nxfw_tool.Gui.Cli
                 Text = Path
             };
 
-            var OkButton = new Button ("Ok") { X = 1, Y = 3 };
+            OkButton = new Button ("Ok") { X = 1, Y = 3 };
             OkButton.Clicked += HandleOkPress;
 
             var CancelButton = new Button ("Cancel") { X = Pos.Right(OkButton), Y = 3 };

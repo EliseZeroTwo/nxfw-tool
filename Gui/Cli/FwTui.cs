@@ -17,12 +17,13 @@ namespace nxfw_tool.Gui.Cli
         public static SelectionListView InfoListView;
         public static MenuBar Menu;
         public static string FwDir;
+        public static FileSelectionWindowManager FileSelectionWM;
         public static NcaInfoWindowManager NcaInfoWM;
         public static List<string> NcaNames;
         public static void OpenNewDir()
         {
-            FileSelectionWindowManager fileSelection = new FileSelectionWindowManager(InfoWin, FwDir);
-            fileSelection.ShowEntryView();
+            FileSelectionWM = new FileSelectionWindowManager(InfoWin, FwDir);
+            FileSelectionWM.ShowEntryView();
         }
 
         public static void Init()
@@ -76,7 +77,7 @@ namespace nxfw_tool.Gui.Cli
             FirmwareWin.RemoveAll();
             var Top = Application.Top;
 
-            NcaNames = Utils.FirmwareUtils.GetAllNcasAndName(FwDir).Values.ToList();
+            NcaNames = Utils.FirmwareUtils.GetAllNcaPathsAndNames(FwDir).Values.ToList();
             NcaNames.Sort();
             
             FirmwareListView = new ListView(NcaNames);
