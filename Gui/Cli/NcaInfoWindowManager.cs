@@ -20,7 +20,7 @@ namespace nxfw_tool.Gui.Cli
         private LoggerWindowManager Logger;
         private Window Window;
         private string Path;
-        FirmwareInfo FwInfo;
+        public FirmwareInfo FwInfo;
 
         public void ShowNcaInfo()
         {
