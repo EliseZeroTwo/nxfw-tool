@@ -17,6 +17,7 @@ namespace nxfw_tool.Gui.Cli
 {
     public class NcaInfoWindowManager
     {
+        private LoggerWindowManager Logger;
         private Window Window;
         private string Path;
         FirmwareInfo FwInfo;
@@ -84,11 +85,14 @@ namespace nxfw_tool.Gui.Cli
             }
         }
 
-        public NcaInfoWindowManager(string path, Window window)
+        public NcaInfoWindowManager(string path, Window window, LoggerWindowManager logger)
         {
             Path = path;
-            FwInfo = new FirmwareInfo(Path);
             Window = window;
+            Logger = logger;
+            FwInfo = new FirmwareInfo(Path);
+            if (FwInfo.SystemVersionNca != null)
+            Logger.Log($"Opened Firmware {FwInfo.VersionInfo.VersionString}");
         }
 
     }
