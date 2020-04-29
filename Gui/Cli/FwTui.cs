@@ -14,6 +14,8 @@ namespace nxfw_tool.Gui.Cli
         public static Window FirmwareWin;
         public static ListView FirmwareListView;
         public static Window InfoWin;
+        public static Window LoggerWin;
+        public static LoggerWindowManager LoggerWM;
         public static SelectionListView InfoListView;
         public static MenuBar Menu;
         public static string FwDir;
@@ -49,16 +51,29 @@ namespace nxfw_tool.Gui.Cli
                 X = Pos.Right(FirmwareWin),
                 Y = 1,  
                 Width = Dim.Fill(),
-                Height = Dim.Fill (),
+                Height = Dim.Percent (50),
                 ColorScheme = DarkScheme,
             };
-            
+
+            LoggerWin = new Window ("Log") {
+                X = Pos.Right(FirmwareWin),
+                Y = Pos.Bottom(InfoWin),  
+                Width = Dim.Fill(),
+                Height = Dim.Fill(),
+                ColorScheme = DarkScheme,
+            };
+
+            LoggerWM = new LoggerWindowManager(LoggerWin);
+ 
             Menu = new MenuBar (new MenuBarItem [] {
-                new MenuBarItem ("Tools/Settings", new MenuItem [] {
+                new MenuBarItem ("Tools", new MenuItem [] {
                     new MenuItem ("Open New FW", "", OpenNewDir),
                     new MenuItem ("Extract All", "", null),
-                    new MenuItem ("Quit", "", Application.RequestStop),
                 }),
+                new MenuBarItem ("Settings", new MenuItem[] {
+                    new MenuItem ("Clear Log", "", LoggerWM.Clear),
+                    new MenuItem ("Quit", "", Application.RequestStop),
+                })
             })
             {
                 ColorScheme = DarkScheme,
@@ -66,6 +81,7 @@ namespace nxfw_tool.Gui.Cli
             
             Top.Add (FirmwareWin);
             Top.Add (InfoWin);
+            Top.Add (LoggerWin);
             Top.Add (Menu);
 
             ReloadActiveNcas();
@@ -81,7 +97,7 @@ namespace nxfw_tool.Gui.Cli
             NcaNames.Sort();
             
             FirmwareListView = new ListView(NcaNames);
-            NcaInfoWM = new NcaInfoWindowManager(FwDir, InfoWin);
+            NcaInfoWM = new NcaInfoWindowManager(FwDir, InfoWin, LoggerWM);
             FirmwareListView.SelectedChanged += NcaInfoWM.ShowNcaInfo;
 
             
