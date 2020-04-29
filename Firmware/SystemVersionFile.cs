@@ -40,11 +40,7 @@ namespace nxfw_tool.Firmware
             Micro = r.ReadByte();
             Rev = r.ReadByte();
             r.ReadBytes(4);
-            VersionPlatform = ASCII.GetString(r.ReadBytes(0x20));
-            VersionHash = ASCII.GetString(r.ReadBytes(0x40));
-            VersionString = ASCII.GetString(r.ReadBytes(0x18));
-            VersionDescription = ASCII.GetString(r.ReadBytes(0x80)); 
-
+            
             // Read the firmware strings
             ReadString(r, 0x20, ref VersionPlatform);
             ReadString(r, 0x40, ref VersionHash);
