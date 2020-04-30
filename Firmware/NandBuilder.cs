@@ -47,6 +47,35 @@ namespace nxfw_tool.Firmware
 
         public void BuildAll(bool exfat=true)
         {
+            void WriteBct(IFile inputIFile, Stream outputStream)
+            {
+                byte[] bctBuffer = new byte[0x4000];
+                inputIFile.Read(out _, 0, bctBuffer.AsSpan());
+                bctBuffer[0x210] = 0x77;
+                outputStream.Write(bctBuffer, 0, 0x4000);
+            }
+
+            void WritePkg1(IFile inputIFile, Stream outputStream)
+            {
+                byte[] pkg1Buffer = new byte[0x40000];
+                inputIFile.Read(out _, 0, pkg1Buffer.AsSpan());
+                outputStream.Write(pkg1Buffer, 0, 0x40000);
+            }
+
+            void WritePkg2(IFile inputIFile, Stream outputStream)
+            {
+                byte[] pkg2Buffer = new byte[0x800000 - 0x4000];
+                inputIFile.Read(out _, 0, pkg2Buffer.AsSpan());
+                PadStream(outputStream, 0x4000);
+                outputStream.Write(pkg2Buffer, 0, 0x800000 - 0x4000);
+            }
+
+            void PadStream(Stream stream, long size)
+            {
+                stream.Position += size - 1;
+                stream.WriteByte(0);
+            }
+
             NcaInfo bcpkg21NcaInfo;
             NcaInfo bcpkg23NcaInfo;
             string bcpkg21NcaPath = "";
@@ -80,108 +109,61 @@ namespace nxfw_tool.Firmware
             using (IFileSystem safeIFs = bcpkg23NcaInfo.TryOpenFileSystemSection(NcaSectionType.Data))
             using (IFileSystem normalIFs = bcpkg21NcaInfo.TryOpenFileSystemSection(NcaSectionType.Data))
             {
-                if ((safeIFs == null && normalIFs == null) || (!normalIFs.FileExists($"/{fwInfo.VersionInfo.VersionPlatform.ToLower()}/bct") || !normalIFs.FileExists($"/{fwInfo.VersionInfo.VersionPlatform.ToLower()}/package1") || !normalIFs.FileExists($"/{fwInfo.VersionInfo.VersionPlatform.ToLower()}/package2") || !safeIFs.FileExists($"/{fwInfo.VersionInfo.VersionPlatform.ToLower()}/bct") || !safeIFs.FileExists($"/{fwInfo.VersionInfo.VersionPlatform.ToLower()}/package1") || !safeIFs.FileExists($"/{fwInfo.VersionInfo.VersionPlatform.ToLower()}/package2")))
+                normalIFs.Extract(FirmwareDirectory + "/owo");
+                if ((safeIFs == null || normalIFs == null) || (!normalIFs.FileExists($"/{fwInfo.VersionInfo.VersionPlatform.ToLower()}/bct") || !normalIFs.FileExists($"/{fwInfo.VersionInfo.VersionPlatform.ToLower()}/package1") || !normalIFs.FileExists($"/{fwInfo.VersionInfo.VersionPlatform.ToLower()}/package2") || !safeIFs.FileExists($"/{fwInfo.VersionInfo.VersionPlatform.ToLower()}/bct") || !safeIFs.FileExists($"/{fwInfo.VersionInfo.VersionPlatform.ToLower()}/package1") || !safeIFs.FileExists($"/{fwInfo.VersionInfo.VersionPlatform.ToLower()}/package2")))
                 {
                     ThrowError("Invalid firmware! missing bct/pkg1/pkg2");
                     return;
                 }
 
-                // BOOT0 & BOOT1
-                using (FileStream boot0File = new FileStream(Path.GetFullPath($"{FirmwareDirectory}/BOOT0.bin"), FileMode.Create))
-                using (FileStream boot1File = new FileStream(Path.GetFullPath($"{FirmwareDirectory}/BOOT1.bin"), FileMode.Create))
+                // BOOT0
+                using (FileStream boot0File = File.Create(Path.GetFullPath($"{FirmwareDirectory}/BOOT0.bin")))
                 {
+                    // Open files
+                    normalIFs.OpenFile(out IFile nPkg1IF, $"/{fwInfo.VersionInfo.VersionPlatform.ToLower()}/package1".ToU8Span(), OpenMode.Read);
+                    normalIFs.OpenFile(out IFile normalBctIFile, $"/{fwInfo.VersionInfo.VersionPlatform.ToLower()}/bct".ToU8Span(), OpenMode.Read);
+                    safeIFs.OpenFile(out IFile safeBctIFile, $"/{fwInfo.VersionInfo.VersionPlatform.ToLower()}/bct".ToU8Span(), OpenMode.Read);
                     for (int x = 0; x < 2; x++)
                     {
-                        // Open Files
-                        normalIFs.OpenFile(out IFile normalBctIFile, $"/{fwInfo.VersionInfo.VersionPlatform.ToLower()}/bct".ToU8Span(), OpenMode.Read);
-                        safeIFs.OpenFile(out IFile safeBctIFile, $"/{fwInfo.VersionInfo.VersionPlatform.ToLower()}/bct".ToU8Span(), OpenMode.Read);
-                        safeIFs.OpenFile(out IFile safePkg1IFile, $"/{fwInfo.VersionInfo.VersionPlatform.ToLower()}/package1".ToU8Span(), OpenMode.Read);
-
-                        // Get file sizes
-                        normalBctIFile.GetSize(out long normalBctSize);
-                        safeBctIFile.GetSize(out long safeBctSize);
-                        safePkg1IFile.GetSize(out long safePkg1Size);
 
                         // Write normal bct
-                        byte[] normalBctBuffer = new byte[normalBctSize];
-                        normalBctIFile.Read(out long normalBytesRead, 0, normalBctBuffer.AsSpan());
-                        normalBctBuffer[0x210] = 0x77;
-                        boot0File.Write(normalBctBuffer, 0, (int)normalBctSize);
-                        for (int j = 0; j < (0x4000 - normalBctSize); j++)
-                            boot0File.WriteByte(0);
+                        WriteBct(normalBctIFile, boot0File);
 
                         // Write safe bct
-                        byte[] safeBctBuffer = new byte[safeBctSize];
-                        safeBctIFile.Read(out long safeBytesRead, 0, safeBctBuffer.AsSpan());
-                        safeBctBuffer[0x210] = 0x77;
-                        boot0File.Write(safeBctBuffer, 0, (int)safeBctSize);
-                        for (int j = 0; j < (0x4000 - safeBctSize); j++)
-                            boot0File.WriteByte(0);
-                            
-                        // Write safe pkg1 to boot1
-                        byte[] safePkg1Buffer = new byte[safePkg1Size];
-                        safePkg1IFile.Read(out long safePkg1ReadLen, 0, safePkg1Buffer.AsSpan());
-                        boot1File.Write(safePkg1Buffer, 0, (int)safePkg1Size);
-                        for (int j = 0; j < (0x40000 - safePkg1Size); j++)
-                            boot1File.WriteByte(0);
-                        
+                        WriteBct(safeBctIFile, boot0File);
                     }
 
-                    for (int j = 0; j < 0xF0000; j++)
-                            boot0File.WriteByte(0);
+                    //Write padding
+                    PadStream(boot0File, 0xF0000);
 
                     for (int x = 0; x < 2; x++)
                     {
-                        normalIFs.OpenFile(out IFile nPkg1IF, $"/{fwInfo.VersionInfo.VersionPlatform.ToLower()}/package1".ToU8Span(), OpenMode.Read);
                         nPkg1IF.GetSize(out long nPkg1Size);
-                        nPkg1IF.AsStream().CopyStream(boot0File, nPkg1Size);
-                        for (int j = 0; j < (0x40000 - nPkg1Size); j++)
-                            boot0File.WriteByte(0);
+                        WritePkg1(nPkg1IF, boot0File);
                     }
+                }
+
+                using (FileStream boot1File = File.Create(Path.GetFullPath($"{FirmwareDirectory}/BOOT1.bin")))
+                {
+                    safeIFs.OpenFile(out IFile safePkg1IFile, $"/{fwInfo.VersionInfo.VersionPlatform.ToLower()}/package1".ToU8Span(), OpenMode.Read);
+                    for (int x = 0; x < 2; x++)
+                        WritePkg1(safePkg1IFile, boot1File);
                 }
             
                 // BCPKG
-                using (FileStream bcpkg21File = new FileStream(Path.GetFullPath($"{FirmwareDirectory}/BCPKG2-1.bin"), FileMode.Create))
-                using (FileStream bcpkg22File = new FileStream(Path.GetFullPath($"{FirmwareDirectory}/BCPKG2-2.bin"), FileMode.Create))
-                using (FileStream bcpkg23File = new FileStream(Path.GetFullPath($"{FirmwareDirectory}/BCPKG2-3.bin"), FileMode.Create))
-                using (FileStream bcpkg24File = new FileStream(Path.GetFullPath($"{FirmwareDirectory}/BCPKG2-4.bin"), FileMode.Create))
+                using (FileStream bcpkg21File = File.Create(Path.GetFullPath($"{FirmwareDirectory}/BCPKG2-1.bin")))
+                using (FileStream bcpkg22File = File.Create(Path.GetFullPath($"{FirmwareDirectory}/BCPKG2-2.bin")))
+                using (FileStream bcpkg23File = File.Create(Path.GetFullPath($"{FirmwareDirectory}/BCPKG2-3.bin")))
+                using (FileStream bcpkg24File = File.Create(Path.GetFullPath($"{FirmwareDirectory}/BCPKG2-4.bin")))
                 {
-                    for (int x = 0; x < 0x4000; x++)
-                    {
-                        bcpkg21File.WriteByte(0);
-                        bcpkg22File.WriteByte(0);
-                        bcpkg23File.WriteByte(0);
-                        bcpkg24File.WriteByte(0);
-                    }
-
                     normalIFs.OpenFile(out IFile normalPkg2IFile, $"/{fwInfo.VersionInfo.VersionPlatform.ToLower()}/package2".ToU8Span(), OpenMode.Read);
-                    normalPkg2IFile.GetSize(out long normalPkg2Size);
-                    
                     safeIFs.OpenFile(out IFile safePkg2IFile, $"/{fwInfo.VersionInfo.VersionPlatform.ToLower()}/package2".ToU8Span(), OpenMode.Read);
-                    safePkg2IFile.GetSize(out long safePkg2Size);
 
-                    byte[] normalPkg2Raw = new byte[normalPkg2Size];
-                    normalPkg2IFile.AsStream().Read(normalPkg2Raw, 0, (int)normalPkg2Size);
+                    WritePkg2(normalPkg2IFile, bcpkg21File);
+                    WritePkg2(normalPkg2IFile, bcpkg22File);
 
-                    byte[] safePkg2Raw = new byte[safePkg2Size];
-                    safePkg2IFile.AsStream().Read(safePkg2Raw, 0, (int)safePkg2Size);
-                    
-                    bcpkg21File.Write(normalPkg2Raw, 0, (int)normalPkg2Size);
-                    bcpkg22File.Write(normalPkg2Raw, 0, (int)normalPkg2Size);
-                    bcpkg23File.Write(safePkg2Raw, 0, (int)safePkg2Size);
-                    bcpkg24File.Write(safePkg2Raw, 0, (int)safePkg2Size);
-
-                    for (int x = 0; x < (0x800000 - normalPkg2Size - 0x4000); x++)
-                    {
-                        bcpkg21File.WriteByte(0);
-                        bcpkg22File.WriteByte(0);
-                    }
-
-                    for (int x = 0; x < (0x800000 - safePkg2Size - 0x4000); x++)
-                    {
-                        bcpkg23File.WriteByte(0);
-                        bcpkg24File.WriteByte(0);
-                    }
+                    WritePkg2(safePkg2IFile, bcpkg23File);
+                    WritePkg2(safePkg2IFile, bcpkg24File);
                 }  
             }
             return;
