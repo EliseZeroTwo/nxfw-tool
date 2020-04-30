@@ -125,7 +125,6 @@ namespace nxfw_tool.Firmware
                     safeIFs.OpenFile(out IFile safeBctIFile, $"/{fwInfo.VersionInfo.VersionPlatform.ToLower()}/bct".ToU8Span(), OpenMode.Read);
                     for (int x = 0; x < 2; x++)
                     {
-
                         // Write normal bct
                         WriteBct(normalBctIFile, boot0File);
 
