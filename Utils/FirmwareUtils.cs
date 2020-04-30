@@ -28,23 +28,7 @@ namespace nxfw_tool.Utils
             if (!Directory.Exists(dirPath))
                 return ncaPathList;
 
-            foreach (string dir in Directory.EnumerateDirectories(dirPath, "*.nca"))
-            {
-                if (File.Exists(dir + Path.DirectorySeparatorChar + "00.nca"))
-                {
-                    NcaInfo nca;
-                    using (IStorage inFile = new LocalStorage(dir + Path.DirectorySeparatorChar + "00.nca", FileAccess.Read))
-                    {
-                        if (inFile != null)
-                        {
-                            nca = new NcaInfo(inFile);
-                            ncaPathList.Add(dir + Path.DirectorySeparatorChar + "00.nca", nca.TitleName);
-                        }
-                    }
-                }
-            }
-
-            foreach (string ncaPath in Directory.EnumerateFiles(dirPath, "*.nca"))
+            foreach (string ncaPath in GetAllNcaPaths(dirPath))
             {
                 NcaInfo nca;
                 using (IStorage inFile = new LocalStorage(ncaPath, FileAccess.Read))
@@ -92,13 +76,20 @@ namespace nxfw_tool.Utils
                 return ncaPathList;
             foreach (string dir in Directory.EnumerateDirectories(dirPath, "*.nca"))
             {
-                if (File.Exists(dir + Path.DirectorySeparatorChar + "00.nca"))
-                    ncaPathList.Add(dir + Path.DirectorySeparatorChar + "00.nca");
+                string fullPath = Path.GetFullPath(dir + Path.DirectorySeparatorChar + "00.nca");
+                if (File.Exists(fullPath))
+                {
+                    NcaInfo ncaInfo = new NcaInfo(new LocalStorage(fullPath, FileAccess.Read));
+                    if (ncaInfo.Nca.Header.ContentType != NcaContentType.Meta)
+                        ncaPathList.Add(fullPath);
+                }
             }
 
             foreach (string ncaPath in Directory.EnumerateFiles(dirPath, "*.nca"))
             {
-                ncaPathList.Add(ncaPath);
+                    NcaInfo ncaInfo = new NcaInfo(new LocalStorage(ncaPath, FileAccess.Read));
+                    if (ncaInfo.Nca.Header.ContentType != NcaContentType.Meta)
+                        ncaPathList.Add(ncaPath);
             }
 
             return ncaPathList;
