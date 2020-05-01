@@ -1,4 +1,5 @@
 *.code-workspace
+.DS_Store
 .vscode
 bin
 obj
