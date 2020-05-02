@@ -10,9 +10,11 @@ namespace nxfw_tool.Gui.Cli
         public string Path = "";
 
         private ListView DirectoryListView;
-        private TextField PathTextField;
+        public TextField PathTextField;
         private System.Collections.Generic.List<string> DirEntryNames;
         public Button OkButton;
+        public Button CancelButton;
+        public Button BrowseButton;
         public Button InvalidPathOkButton;
         
         protected bool Selection = false;
@@ -64,19 +66,6 @@ namespace nxfw_tool.Gui.Cli
                 break;
             }
         }
-        protected void HandleOkPress()
-        {
-            if (!Directory.Exists(PathTextField.Text.ToString()))
-            {
-                ShowInvalidPathDialog();
-                return;
-            }
-
-            Path = System.IO.Path.GetFullPath(PathTextField.Text.ToString());
-            FwTui.FwDir = Path;
-            FwTui.ReloadActiveNcas();
-            FwTui.InfoWin.RemoveAll();            
-        }
         public void ShowSelectionView()
         {
             if (!Directory.Exists(PathTextField.Text.ToString()))
@@ -114,11 +103,10 @@ namespace nxfw_tool.Gui.Cli
             };
 
             OkButton = new Button ("Ok") { X = 1, Y = 3 };
-            OkButton.Clicked += HandleOkPress;
 
-            var CancelButton = new Button ("Cancel") { X = Pos.Right(OkButton), Y = 3 };
+            CancelButton = new Button ("Cancel") { X = Pos.Right(OkButton), Y = 3 };
 
-            var BrowseButton = new Button ("Browse") { X = Pos.Right(CancelButton), Y = 3 };
+            BrowseButton = new Button ("Browse") { X = Pos.Right(CancelButton), Y = 3 };
             BrowseButton.Clicked += ShowSelectionView;
 
             ChildWindow.Add(PathLabel);
@@ -129,11 +117,11 @@ namespace nxfw_tool.Gui.Cli
             Application.Top.SetFocus(OkButton);
         }
 
-        public FileSelectionWindowManager(Window window, string path)
+        public FileSelectionWindowManager(Window window, string path, string windowName = "Select a Directory")
         {
             Path = path;
             ChildWindow = window;
-
+            ChildWindow.Title = windowName;
             if (!System.IO.Directory.Exists(path))
                 path = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         }

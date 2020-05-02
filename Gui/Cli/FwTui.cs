@@ -26,8 +26,40 @@ namespace nxfw_tool.Gui.Cli
         {
             FileSelectionWM = new FileSelectionWindowManager(InfoWin, FwDir);
             FileSelectionWM.ShowEntryView();
+            FileSelectionWM.OkButton.Clicked += () =>
+            {
+                if (!System.IO.Directory.Exists(FileSelectionWM.PathTextField.Text.ToString()))
+                {
+                    FileSelectionWM.ShowInvalidPathDialog();
+                    Application.Top.SetFocus(FileSelectionWM.PathTextField);
+                    return;
+                }
+
+                FwDir = System.IO.Path.GetFullPath(FileSelectionWM.PathTextField.Text.ToString());
+                
+                ReloadActiveNcas();
+                InfoWin.RemoveAll(); 
+            };
         }
 
+        public static void BuildPartitions()
+        {
+            FileSelectionWM = new FileSelectionWindowManager(InfoWin, FwDir);
+            FileSelectionWM.ShowEntryView();
+            FileSelectionWM.OkButton.Clicked += () => 
+            {
+                string outDirectory = FileSelectionWM.PathTextField.Text.ToString();
+                InfoWin.RemoveAll();
+                InfoWin.Title = "Info";
+                NandBuilder builder = new NandBuilder(FwDir, outDirectory);
+                builder.BuildAll();
+            };
+            FileSelectionWM.CancelButton.Clicked += () => 
+            {
+                InfoWin.RemoveAll();
+                InfoWin.Title = "Info";
+            };
+        }
         public static void Init()
         {
             Application.Init ();
@@ -69,6 +101,7 @@ namespace nxfw_tool.Gui.Cli
                 new MenuBarItem ("Tools", new MenuItem [] {
                     new MenuItem ("Open New FW", "", OpenNewDir),
                     new MenuItem ("Extract All", "", null),
+                    new MenuItem ("Build Partitions", "", BuildPartitions),
                 }),
                 new MenuBarItem ("Settings", new MenuItem[] {
                     new MenuItem ("Clear Log", "", LoggerWM.Clear),
@@ -99,10 +132,12 @@ namespace nxfw_tool.Gui.Cli
             FirmwareListView = new ListView(NcaNames);
             NcaInfoWM = new NcaInfoWindowManager(FwDir, InfoWin, LoggerWM);
             FirmwareListView.SelectedChanged += NcaInfoWM.ShowNcaInfo;
+            InfoWin.Title = $"Firmware {NcaInfoWM.FwInfo.VersionInfo.Major}.{NcaInfoWM.FwInfo.VersionInfo.Minor}.{NcaInfoWM.FwInfo.VersionInfo.Micro}";
 
             
             FirmwareWin.Add (FirmwareListView);
             Application.Top.SetFocus(FirmwareListView);
+            NcaInfoWM.ShowNcaInfo();
         }
 
     }

@@ -4,7 +4,6 @@ using static System.Text.Encoding;
 
 namespace nxfw_tool.Firmware
 {
-    [StructLayout(LayoutKind.Sequential, Pack = 0x4, Size = 256)]
     public struct SystemVersionFile
     {
         public byte Major;
@@ -40,10 +39,8 @@ namespace nxfw_tool.Firmware
             Minor = r.ReadByte();
             Micro = r.ReadByte();
             Rev = r.ReadByte();
-            
-            // Skip the 4 bytes we don't use
             r.ReadBytes(4);
-
+            
             // Read the firmware strings
             ReadString(r, 0x20, ref VersionPlatform);
             ReadString(r, 0x40, ref VersionHash);
